@@ -1,0 +1,160 @@
+# options for analysis running
+run:
+  concurrency: 4
+
+  deadline: 30m
+
+  issues-exit-code: 1
+
+  tests: true
+
+  skip-files:
+    - ".*_zz_generated\\.deepcopy\\.go$"
+
+
+# output configuration options
+output:
+  format: colored-line-number
+
+  print-issued-lines: true
+
+  print-linter-name: true
+
+linters-settings:
+  errcheck:
+    check-type-assertions: false
+    check-blank: false
+  govet:
+    check-shadowing: true
+    settings:
+      printf:
+        funcs:
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
+  golint:
+    min-confidence: 0 # default value
+  gofmt:
+    simplify: true
+  goimports:
+    local-prefixes: github.com/trilioData/k8s-triliovault-operator
+  gocyclo:
+    min-complexity: 25
+  maligned:
+    suggest-new: true
+  dupl:
+    threshold: 300
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  depguard:
+    list-type: blacklist
+    include-go-root: false
+    packages:
+      # logging is allowed only by logutils.Log, logrus
+      # is allowed to use only in logutils package
+      - github.com/sirupsen/logrus
+  misspell:
+    locale: US
+  lll:
+    line-length: 140
+    tab-width: 1
+  unused:
+    check-exported: false
+  unparam:
+    check-exported: true
+  nakedret:
+    max-func-lines: 30
+  prealloc:
+    simple: true
+    range-loops: true
+    for-loops: false
+  gocritic:
+    enabled-tags:
+      - performance
+      - style
+      - experimental
+    disabled-checks:
+      - wrapperFunc
+      - regexpMust
+    settings:
+      captLocal:
+        paramsOnly: true
+      rangeValCopy:
+        sizeThreshold: 64
+  funlen:
+   lines: 150
+   statements: 80
+
+linters:
+  # please, do not use `enable-all`: it's deprecated and will be removed soon.
+  # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
+  disable-all: true
+  enable:
+    - deadcode
+    - dupl
+    - errcheck
+    - goconst
+    - gocritic
+    - gocyclo
+    - gofmt
+    - goimports
+    - golint
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - interfacer
+    - lll
+    - misspell
+    - nakedret
+    - scopelint
+    - staticcheck
+    - structcheck
+    - stylecheck
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - varcheck
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - errcheck
+        - dupl
+        - gosec
+        - gocritic
+
+    - linters:
+        - lll
+      source: "^//go:generate "
+
+    - linters:
+        - lll
+      source: "kubebuilder:"
+
+    - linters:
+        - staticcheck
+      text: "SA1019:"
+
+    - linters:
+        - stylecheck
+      text: "ST1016:"
+
+    - linters:
+        - golint
+      source: "^type .*List struct \\{"
+
+  exclude-use-default: true
+
+  max-issues-per-linter: 0
+
+  max-same-issues: 0
+
+service:
+  golangci-lint-version: 1.30.x
+  project-path: github.com/trilioData/k8s-triliovault-operator
