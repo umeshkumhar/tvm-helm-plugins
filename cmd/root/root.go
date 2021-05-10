@@ -8,26 +8,23 @@ import (
 )
 
 const (
-	binaryName               = "operator-init"
+	binaryName               = "tvm-upgrade"
 	helmReleaseFlag          = "release"
 	helmReleaseNamespaceFlag = "namespace"
-	serviceAccountFlag       = "serviceaccount"
-	upgradeHookUsage         = "Pre upgrade job of the TVM v2.0.x helm releases to the new TVM v2.1.x release"
+	upgradeHookUsage         = "tvm-upgrade triggers pre upgrade job of the TVM v2.0.x helm releases to the new TVM v2.1.x release"
 
-	shortUsage = "upgrade-plugin is used to run pre upgrade job from v2.0.x to v2.1.x TVM operator"
-	longUsage  = `upgrade-plugin is used to run the pre upgrade job before upgrade from v2.0.x helm release to the new 
+	shortUsage = "tvm-upgrade is used to run pre upgrade job from v2.0.x to v2.1.x TVM operator"
+	longUsage  = `tvm-upgrade is used to run the pre upgrade job before upgrade from v2.0.x helm release to the new 
 v2.1.x release version of k8s-triliovault-operator.
 
 --release         <release_name> of the previous k8s-triliovault-operator
---namespace       <namespace> of the previous k8s-triliovault-operator 
---service-account <service_account> name which user wants to run job with. It will take default service account`
+--namespace       <namespace> of the previous k8s-triliovault-operator. If not provided, default namespace is considered.`
 )
 
 var (
 	rootCmd              *cobra.Command
 	helmReleaseName      string
 	helmReleaseNamespace string
-	serviceAccount       string
 )
 
 func init() {
@@ -43,8 +40,7 @@ func newHelmUpgradeCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&helmReleaseName, helmReleaseFlag, "r", "", upgradeHookUsage)
-	cmd.Flags().StringVarP(&helmReleaseNamespace, helmReleaseNamespaceFlag, "n", "", upgradeHookUsage)
-	cmd.Flags().StringVarP(&serviceAccount, serviceAccountFlag, "s", "default", upgradeHookUsage)
+	cmd.Flags().StringVarP(&helmReleaseNamespace, helmReleaseNamespaceFlag, "n", "default", upgradeHookUsage)
 	err := cmd.MarkFlagRequired(helmReleaseFlag)
 	if err != nil {
 		log.Fatal("Error while setting up the Hook command")
@@ -56,8 +52,8 @@ func newHelmUpgradeCmd() *cobra.Command {
 }
 
 func runHelmPreUpgradeJobE(cmd *cobra.Command, args []string) error {
-	if pre_upgrade.Validate(helmReleaseName, helmReleaseNamespace, serviceAccount) {
-		if err := pre_upgrade.Do(helmReleaseName, helmReleaseNamespace, serviceAccount); err != nil {
+	if pre_upgrade.Validate(helmReleaseName, helmReleaseNamespace) {
+		if err := pre_upgrade.Do(helmReleaseName, helmReleaseNamespace); err != nil {
 			return err
 		}
 	}

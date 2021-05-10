@@ -2,8 +2,6 @@ package preupgrade
 
 import (
 	"context"
-	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -13,10 +11,11 @@ import (
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 
 	// Used to authenticate to create the client config
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+
+	ctrl "sigs.k8s.io/controller-runtime"
 
 	storagev3 "helm.sh/helm/v3/pkg/storage"
 	driverv3 "helm.sh/helm/v3/pkg/storage/driver"
@@ -25,7 +24,6 @@ import (
 )
 
 var (
-	err       error
 	cfg       *rest.Config
 	clientset *kubernetes.Clientset
 )
@@ -38,31 +36,21 @@ var InstallRetry = wait.Backoff{
 }
 
 func init() {
-	kubeconfig := fmt.Sprintf("%s/.kube/config", os.Getenv("HOME"))
-	cfg, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
-	if err != nil {
-		panic(err.Error())
-	}
+	cfg = ctrl.GetConfigOrDie()
 	clientset, _ = kubernetes.NewForConfig(cfg)
+
 }
 
 func notFoundErr(err error) bool {
 	return err != nil && strings.Contains(err.Error(), "not found")
 }
 
-func Validate(name, namespace, serviceaccount string) bool {
-	log.Info("Validating the sufficient permissions to run the pre upgrade job")
+func Validate(name, namespace string) bool {
+	log.Info("Validating the release is present or not")
 
 	clientV1, err := typev1.NewForConfig(cfg)
 	if err != nil {
 		log.Errorf("error getting kubeconfig %v", err)
-		return false
-	}
-
-	validUser := validateUserPermissions(namespace)
-	validSA := validateServiceAccountPermissions(namespace, serviceaccount)
-
-	if !validUser || !validSA {
 		return false
 	}
 
@@ -78,10 +66,25 @@ func Validate(name, namespace, serviceaccount string) bool {
 	return true
 }
 
-func Do(name, namespace, serviceaccount string) error {
+func Do(name, namespace string) error {
 	defer cleanup(namespace)
 
-	job := getJobObject(name, namespace, serviceaccount)
+	sa := getServiceAccount(namespace)
+	if _, err := clientset.CoreV1().ServiceAccounts(namespace).Create(context.TODO(), sa, metav1.CreateOptions{}); err != nil {
+		return err
+	}
+
+	role := getRole(namespace)
+	if _, err := clientset.RbacV1().Roles(namespace).Create(context.TODO(), role, metav1.CreateOptions{}); err != nil {
+		return err
+	}
+
+	rolebinding := getRoleBinding(namespace)
+	if _, err := clientset.RbacV1().RoleBindings(namespace).Create(context.TODO(), rolebinding, metav1.CreateOptions{}); err != nil {
+		return err
+	}
+
+	job := getJobObject(name, namespace)
 	if _, err := clientset.BatchV1().Jobs(namespace).Create(context.TODO(), job, metav1.CreateOptions{}); err != nil {
 		return err
 	}
@@ -107,65 +110,28 @@ func Do(name, namespace, serviceaccount string) error {
 
 func cleanup(namespace string) {
 	log.Info("Deleting the job")
-	if err := clientset.BatchV1().Jobs(namespace).Delete(context.TODO(), JobName, metav1.DeleteOptions{}); err != nil {
+	if err := clientset.BatchV1().Jobs(namespace).Delete(context.TODO(), jobName, metav1.DeleteOptions{}); err != nil {
 		if !apierrors.IsNotFound(err) {
-			log.Errorf("Error deleting the job %s, you need to manually delete it", JobName)
-		}
-	}
-}
-
-func validateServiceAccountPermissions(namespace, serviceAccount string) bool {
-	var valid = true
-	user := "system:serviceaccount:" + namespace + ":" + serviceAccount
-	verbs := []string{"list", "get", "update"}
-
-	cfg.Impersonate = rest.ImpersonationConfig{
-		UserName: user,
-	}
-
-	clset, err := kubernetes.NewForConfig(cfg)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	for i := range verbs {
-		sar := getSelfSubjectAccessReview(namespace, verbs[i], "secret")
-		resp, err := clset.AuthorizationV1().SelfSubjectAccessReviews().Create(context.TODO(), sar, metav1.CreateOptions{})
-		if err != nil {
-			log.Errorf("error running authentication on service account %v %v", serviceAccount, err)
-			return false
-		}
-
-		if resp.Status.Allowed {
-			log.Infof("You have %s secret permission", verbs[i])
-		} else {
-			valid = false
-			log.Errorf("Service Account %s doesn't have permission to %s secret", serviceAccount, verbs[i])
+			log.Errorf("Error deleting the job %s, you need to manually delete it", jobName)
 		}
 	}
 
-	return valid
-}
-
-func validateUserPermissions(namespace string) bool {
-	var valid = true
-	verbs := []string{"create", "delete"}
-	for i := range verbs {
-		sar := getSelfSubjectAccessReview(namespace, verbs[i], "job")
-
-		resp, err := clientset.AuthorizationV1().SelfSubjectAccessReviews().Create(context.TODO(), sar, metav1.CreateOptions{})
-		if err != nil {
-			log.Errorf("error running authentication on User %v", err)
-			return false
-		}
-
-		if resp.Status.Allowed {
-			log.Infof("You have %s job permission", verbs[i])
-		} else {
-			valid = false
-			log.Errorf("User doesn't have permission to %s job", verbs[i])
+	if err := clientset.RbacV1().RoleBindings(namespace).Delete(context.TODO(), roleBindingName, metav1.DeleteOptions{}); err != nil {
+		if !apierrors.IsNotFound(err) {
+			log.Errorf("Error deleting the rolebinding %s, you need to manually delete it", roleBindingName)
 		}
 	}
 
-	return valid
+	if err := clientset.RbacV1().Roles(namespace).Delete(context.TODO(), roleName, metav1.DeleteOptions{}); err != nil {
+		if !apierrors.IsNotFound(err) {
+			log.Errorf("Error deleting the role %s, you need to manually delete it", roleName)
+		}
+	}
+
+	if err := clientset.CoreV1().ServiceAccounts(namespace).Delete(context.TODO(), serviceAccountName,
+		metav1.DeleteOptions{}); err != nil {
+		if !apierrors.IsNotFound(err) {
+			log.Errorf("Error deleting the service account %s, you need to manually delete it", serviceAccountName)
+		}
+	}
 }
