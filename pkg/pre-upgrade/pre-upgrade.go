@@ -66,7 +66,7 @@ func Validate(name, namespace string) bool {
 	return true
 }
 
-func Do(name, namespace string) error {
+func Do(name, namespace, image string) error {
 	defer cleanup(namespace)
 
 	sa := getServiceAccount(namespace)
@@ -84,7 +84,7 @@ func Do(name, namespace string) error {
 		return err
 	}
 
-	job := getJobObject(name, namespace)
+	job := getJobObject(name, namespace, image)
 	if _, err := clientset.BatchV1().Jobs(namespace).Create(context.TODO(), job, metav1.CreateOptions{}); err != nil {
 		return err
 	}

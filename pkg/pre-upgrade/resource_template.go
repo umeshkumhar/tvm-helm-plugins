@@ -58,7 +58,7 @@ func getRoleBinding(namespace string) *rbacv1.RoleBinding {
 	}
 }
 
-func getJobObject(name, namespace string) *batchv1.Job {
+func getJobObject(name, namespace, imageRegistry string) *batchv1.Job {
 	return &batchv1.Job{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
@@ -80,7 +80,7 @@ func getJobObject(name, namespace string) *batchv1.Job {
 					ServiceAccountName: serviceAccountName,
 					Containers: []corev1.Container{{
 						Name:  "pre-release-change",
-						Image: "gcr.io/amazing-chalice-243510/operator-webhook-init:updatecrd",
+						Image: imageRegistry + "/operator-webhook-init:v2.1.0",
 						Command: []string{
 							"./operator-init",
 							"--upgrade",
