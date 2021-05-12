@@ -6,6 +6,3 @@ command: "$HELM_PLUGIN_DIR/bin/tvm-upgrade"
 downloaders:
 - command: "bin/tvm-upgrade"
 useTunnel: false
-hooks:
-  install: "cd $HELM_PLUGIN_DIR; scripts/install_plugin.sh"
-  update: "cd $HELM_PLUGIN_DIR; scripts/install_plugin.sh"
