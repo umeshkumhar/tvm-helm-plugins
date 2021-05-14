@@ -4,6 +4,24 @@ cd $HELM_PLUGIN_DIR
 version="$(cat plugin.yaml | grep "version" | cut -d '"' -f 2)"
 echo "Installing tvm-upgrade ${version} ..."
 
+# Find correct archive name
+unameOut="$(uname -s)"
+
+case "${unameOut}" in
+    Linux*)             os=Linux;;
+    Darwin*)            os=Darwin;;
+    MINGW*|MSYS_NT*)    os=windows;;
+    *)                  os="UNKNOWN:${unameOut}"
+esac
+
+arch=`uname -m`
+
+if echo "$os" | grep -qe '.*UNKNOWN.*'
+then
+    echo "Unsupported OS / architecture: ${os}_${arch}"
+    exit 1
+fi
+
 url="https://github.com/trilioData/tvm-helm-plugins/bin/tvm-upgrade"
 
 filename=`echo ${url} | sed -e "s/^.*\///g"`
@@ -21,4 +39,5 @@ else
 fi
 
 # Install bin
-rm -rf bin && mkdir bin && tar xvf $filename -C bin > /dev/null && rm -f $filename
+rm -rf bin && mkdir bin && mv tvm-upgrade bin/ && cd bin && chmod +x tvm-upgrade
+#tar xvf $filename -C bin > /dev/null && rm -f $filename
