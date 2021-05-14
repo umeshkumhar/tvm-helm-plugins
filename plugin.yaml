@@ -2,7 +2,10 @@ name: "tvm-upgrade"
 version: "0.1.0"
 usage: "Please see https://github.com/trilioData/helm- for usage"
 description: "Push chart package to ChartMuseum"
+ignoreFlags: false
 command: "$HELM_PLUGIN_DIR/bin/tvm-upgrade"
-downloaders:
-- command: "bin/tvm-upgrade"
-useTunnel: false
+hooks:
+  install: "$HELM_PLUGIN_DIR/install.sh"
+#downloaders:
+#- command: "bin/tvm-upgrade"
+#useTunnel: false
