@@ -1,0 +1,74 @@
+project_name: tvm-helm-plugins
+release:
+  github:
+    owner: trilioData
+    name: tvm-helm-plugins
+  prerelease: "true"
+  name_template: '{{.Tag}}'
+milestones:
+- repo:
+    owner: trilioData
+    name: tvm-helm-plugins
+  name_template: '{{ .Tag }}'
+scoop:
+  name: tvm-helm-plugins
+  commit_author:
+    name: goreleaserbot
+    email: goreleaser@carlosbecker.com
+  commit_msg_template: Scoop update for {{ .ProjectName }} version {{ .Tag }}
+builds:
+- id: tvm-upgrade
+  goos:
+  - linux
+  - darwin
+  - windows
+  goarch:
+  - "386"
+  - amd64
+  goarm:
+  - "6"
+  targets:
+  - linux_386
+  - linux_amd64
+  - darwin_amd64
+  - windows_386
+  - windows_amd64
+  dir: .
+  main: ./cmd/
+  ldflags:
+  - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+    -X main.builtBy=goreleaser
+  binary: tvm-upgrade
+  env:
+  - CGO_ENABLED=0
+  lang: go
+  gobinary: go
+archives:
+- id: tvm-upgrade-archive
+  builds:
+  - tvm-upgrade
+  name_template: tvm-upgrade_{{ .Tag }}_{{ .Os }}_{{ .Arch -}}
+  format: tar.gz
+  format_overrides:
+  - goos: windows
+    format: zip
+  files:
+  - LICENSE.md
+  allow_different_binary_count: false
+snapshot:
+  name_template: '{{ .Tag }}-SNAPSHOT-{{ .ShortCommit }}'
+checksum:
+  name_template: tvm-upgrade-sha256.txt
+  algorithm: sha256
+dist: dist
+env_files:
+  github_token: ~/.config/goreleaser/github_token
+  gitlab_token: ~/.config/goreleaser/gitlab_token
+  gitea_token: ~/.config/goreleaser/gitea_token
+source:
+  name_template: '{{ .ProjectName }}-{{ .Version }}'
+  format: tar.gz
+github_urls:
+  download: https://github.com
+gitlab_urls:
+  download: https://gitlab.com
