@@ -1,6 +1,6 @@
 name: "tvm-upgrade"
 version: "0.1.0"
-usage: "Please see https://github.com/pallav-trilio/tvm-helm-plugins for usage"
+usage: "Please see https://github.com/trilioData/tvm-helm-plugins for usage"
 description: "Push chart package to ChartMuseum"
 ignoreFlags: false
 platformCommand:
