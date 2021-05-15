@@ -22,22 +22,21 @@ then
     exit 1
 fi
 
-url="https://github.com/trilioData/tvm-helm-plugins/bin/tvm-upgrade"
+url="https://github.com/trilioData/tvm-helm-plugins/blob/main/dist/tvm-upgrade_v0.0.0_linux_amd64.tar.gz?raw=true"
 
 filename=`echo ${url} | sed -e "s/^.*\///g"`
 
-# Download archive
-if [ -n $(command -v curl) ]
-then
-    curl -sSL -O $url
-elif [ -n $(command -v wget) ]
-then
-    wget -q $url
-else
-    echo "Need curl or wget"
-    exit -1
-fi
+  # Download archive
+  if [ -n $(command -v curl) ]
+  then
+      curl -sSL -O $url
+  elif [ -n $(command -v wget) ]
+  then
+      wget -q $url
+  else
+      echo "Need curl or wget"
+      exit -1
+  fi
 
 # Install bin
-rm -rf bin && mkdir bin && mv tvm-upgrade bin/ && cd bin && chmod +x tvm-upgrade
-#tar xvf $filename -C bin > /dev/null && rm -f $filename
+rm -rf bin && mkdir bin && tar xvf $filename -C bin > /dev/null && rm -f $filename
