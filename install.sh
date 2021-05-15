@@ -11,7 +11,8 @@ case "${unameOut}" in
     Linux*)             os=linux;;
     Darwin*)            os=darwin;;
     MINGW*|MSYS_NT*)    os=windows;;
-    *)                  os="UNKNOWN:${unameOut}"
+    Windows_NT)         os=windows;;
+    *)                  os="UNKNOWN:${unameOut}";;
 esac
 
 archOut=`uname -m`
@@ -20,7 +21,7 @@ case "${archOut}" in
     amd64*)             arch=amd64;;
     x86_64*)            arch=amd64;;
     386*)               arch=386;;
-    *)                  arch="UNKNOWN:${unameOut}"
+    *)                  arch=386;;
 esac
 
 if echo "$os" | grep -qe '.*UNKNOWN.*'
