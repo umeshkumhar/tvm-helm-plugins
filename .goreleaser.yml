@@ -14,15 +14,7 @@ builds:
       - amd64
 
 archives:
-  - id: tvm-upgrade-archive
-    name_template: |-
-      tvm-upgrade_{{ .Tag }}_{{ .Os }}_{{ .Arch -}}
-    builds:
-      - tvm-upgrade
-    format_overrides:
-      - goos: windows
-        format: zip
-    files: ["LICENSE.md"]
+  - format: binary
 
 checksum:
   name_template: "tvm-upgrade-sha256.txt"

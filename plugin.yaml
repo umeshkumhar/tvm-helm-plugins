@@ -1,11 +1,21 @@
 name: "tvm-upgrade"
 version: "0.1.0"
-usage: "Please see https://github.com/trilioData/helm- for usage"
+usage: "Please see https://github.com/pallav-trilio/tvm-helm-plugins for usage"
 description: "Push chart package to ChartMuseum"
 ignoreFlags: false
-command: "$HELM_PLUGIN_DIR/bin/tvm-upgrade"
-hooks:
-  install: "$HELM_PLUGIN_DIR/install.sh"
-#downloaders:
-#- command: "bin/tvm-upgrade"
-#useTunnel: false
+platformCommand:
+  - os: linux
+    arch: i386
+    command: "$HELM_PLUGIN_DIR/dist/tvm-upgrade_linux_386/tvm-upgrade"
+  - os: linux
+    arch: amd64
+    command: "$HELM_PLUGIN_DIR/dist/tvm-upgrade_linux_amd64/tvm-upgrade"
+  - os: windows
+    arch: amd64
+    command: "$HELM_PLUGIN_DIR/dist/tvm-upgrade_windows_amd64/tvm-upgrade.exe"
+  - os: windows
+    arch: i386
+    command: "$HELM_PLUGIN_DIR/dist/tvm-upgrade_windows_386/tvm-upgrade.exe"
+  - os: darwin
+    arch: amd64
+    command: "$HELM_PLUGIN_DIR/dist/tvm-upgrade_darwin_amd64/tvm-upgrade"
