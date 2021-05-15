@@ -8,13 +8,20 @@ echo "Installing tvm-upgrade ${version} ..."
 unameOut="$(uname -s)"
 
 case "${unameOut}" in
-    Linux*)             os=Linux;;
-    Darwin*)            os=Darwin;;
+    Linux*)             os=linux;;
+    Darwin*)            os=darwin;;
     MINGW*|MSYS_NT*)    os=windows;;
     *)                  os="UNKNOWN:${unameOut}"
 esac
 
-arch=`uname -m`
+archOut=`uname -m`
+
+case "${archOut}" in
+    amd64*)             arch=amd64;;
+    x86_64*)            arch=amd64;;
+    386*)               arch=386;;
+    *)                  arch="UNKNOWN:${unameOut}"
+esac
 
 if echo "$os" | grep -qe '.*UNKNOWN.*'
 then
@@ -22,7 +29,7 @@ then
     exit 1
 fi
 
-url="https://github.com/trilioData/tvm-helm-plugins/blob/main/dist/tvm-upgrade_v0.0.0_linux_amd64.tar.gz?raw=true"
+url="https://github.com/trilioData/tvm-helm-plugins/blob/main/dist/tvm-upgrade_v0.0.0_${os}_${arch}.tar.gz?raw=true"
 
 filename=`echo ${url} | sed -e "s/^.*\///g"`
 
