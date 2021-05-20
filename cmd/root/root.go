@@ -19,9 +19,9 @@ const (
 v2.1.x release version of k8s-triliovault-operator.
 
 --release         <release_name> of the previous k8s-triliovault-operator
---namespace       <namespace> of the previous k8s-triliovault-operator. If not provided, default namespace is considered.
+--namespace       <namespace> of the previous k8s-triliovault-operator.
 --imageRegistry   <imageRegistry> is the registry where the docker image of operator-webhook-init is stored. 
-This needs to be provided only for dark installs`
+This needs to be provided only for dark installations`
 )
 
 var (
@@ -44,10 +44,11 @@ func newHelmUpgradeCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&helmReleaseName, helmReleaseFlag, "r", "", upgradeHookUsage)
-	cmd.Flags().StringVarP(&helmReleaseNamespace, helmReleaseNamespaceFlag, "n", "default", upgradeHookUsage)
+	cmd.Flags().StringVarP(&helmReleaseNamespace, helmReleaseNamespaceFlag, "n", "", upgradeHookUsage)
 	cmd.Flags().StringVarP(&imageRegistryName, imageRegistryFlag, "i", "eu.gcr.io/amazing-chalice-243510", upgradeHookUsage)
-	err := cmd.MarkFlagRequired(helmReleaseFlag)
-	if err != nil {
+	rErr := cmd.MarkFlagRequired(helmReleaseFlag)
+	nErr := cmd.MarkFlagRequired(helmReleaseNamespaceFlag)
+	if rErr != nil || nErr != nil {
 		log.Fatal("Error while setting up the Hook command")
 	}
 
