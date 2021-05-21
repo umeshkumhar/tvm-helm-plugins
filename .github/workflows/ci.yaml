@@ -21,3 +21,17 @@ jobs:
         uses: golangci/golangci-lint-action@v2
         with:
           version: v1.30
+      
+      - name: Set up Go 1.15
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.15
+        id: go
+        
+      - name: Release with GoReleaser
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          version: latest
+          args: release --skip-validate
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
