@@ -10,8 +10,13 @@ jobs:
     steps:
       - name: Checkout the repository
         uses: actions/checkout@master
-      - name: Generate the artifacts
-        uses: skx/github-action-build@master
+      - name: Release with GoReleaser
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          version: latest
+          args: release --skip-validate
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }} 
       - name: Upload the artifacts
         uses: skx/github-action-publish-binaries@master
         env:
