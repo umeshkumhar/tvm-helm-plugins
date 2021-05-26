@@ -21,3 +21,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
+      - uses: pocket-apps/action-update-version@v1
+        with:
+          files: 'plugin.yaml'
+          version-regexp: '\d+.\d+.\d+'
+          repo-token: ${{ secrets.TOKEN }}
