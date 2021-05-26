@@ -12,14 +12,18 @@ builds:
     goarch:
       - 386
       - amd64
-
+      - arm
+      - arm64
 archives:
-  - format: binary
-
+  - id: tvm-upgrade-archive
+    name_template: |-
+      tvm-upgrade_{{ .Tag }}_{{ .Os }}_{{ .Arch -}}
+    builds:
+      - tvm-upgrade
+    files: ["LICENSE.md"]
 checksum:
   name_template: "tvm-upgrade-sha256.txt"
   algorithm: sha256
-
 release:
   # If set to auto, will mark the release as not ready for production
   # in case there is an indicator for this in the tag e.g. v1.0.0-rc1
